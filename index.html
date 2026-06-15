@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Succession Plan | Akij Resource</title>
+<style>
+  :root{
+    --primary:#0B4F4A;
+    --primary-light:#13796F;
+    --accent:#D98E3F;
+    --bg:#F5F3EE;
+    --card:#FFFFFF;
+    --border:#DDD8CE;
+    --text:#23302E;
+    --muted:#6B7A77;
+    --danger:#C0533E;
+    --radius:10px;
+    --shadow:0 2px 10px rgba(11,79,74,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI',Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.5;
+  }
+  .header{
+    background:var(--primary);
+    color:#fff;
+    padding:28px 24px;
+  }
+  .header h1{margin:0;font-size:1.5rem;font-weight:700;letter-spacing:.3px;}
+  .header p{margin:6px 0 0;color:#CFE7E3;font-size:.92rem;}
+  .wrap{
+    max-width:880px;
+    margin:0 auto;
+    padding:24px 16px 80px;
+  }
+  .progress{
+    display:flex;
+    gap:6px;
+    margin-bottom:24px;
+  }
+  .progress div{
+    flex:1;
+    height:5px;
+    background:var(--border);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .progress div span{
+    display:block;
+    height:100%;
+    width:0%;
+    background:var(--accent);
+    transition:width .3s ease;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:24px;
+    margin-bottom:20px;
+  }
+  .card h2{
+    margin:0 0 4px;
+    font-size:1.1rem;
+    color:var(--primary);
+    border-bottom:2px solid var(--accent);
+    padding-bottom:8px;
+  }
+  .card .sub{
+    color:var(--muted);
+    font-size:.85rem;
+    margin:0 0 16px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:16px;
+  }
+  @media (max-width:640px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field.full{grid-column:1 / -1;}
+  label{font-size:.85rem;font-weight:600;color:var(--text);}
+  label .req{color:var(--danger);}
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  select,
+  textarea{
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    font-size:.92rem;
+    font-family:inherit;
+    background:#fff;
+    color:var(--text);
+    width:100%;
+  }
+  input:focus, select:focus, textarea:focus{
+    outline:none;
+    border-color:var(--primary-light);
+    box-shadow:0 0 0 3px rgba(19,121,111,0.12);
+  }
+  textarea{resize:vertical;min-height:80px;}
+  .hint{font-size:.78rem;color:var(--muted);}
+  .radio-group{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .radio-option{
+    flex:1;
+    min-width:200px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px;
+    cursor:pointer;
+    transition:.15s;
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .radio-option:hover{border-color:var(--primary-light);}
+  .radio-option input{margin-top:3px;}
+  .radio-option .label-title{font-weight:600;font-size:.92rem;}
+  .radio-option .label-sub{font-size:.78rem;color:var(--muted);margin-top:2px;}
+  .radio-option.selected{
+    border-color:var(--primary-light);
+    background:#EEF7F5;
+  }
+
+  .hidden{display:none !important;}
+
+  .successor-card{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:18px;
+    margin-bottom:16px;
+    position:relative;
+    background:#FBFAF7;
+  }
+  .successor-card .badge{
+    position:absolute;
+    top:-12px;
+    left:14px;
+    background:var(--primary);
+    color:#fff;
+    font-size:.75rem;
+    font-weight:700;
+    padding:3px 10px;
+    border-radius:12px;
+    letter-spacing:.5px;
+  }
+  .successor-card .remove-btn{
+    position:absolute;
+    top:10px;
+    right:10px;
+    background:none;
+    border:none;
+    color:var(--danger);
+    font-size:.8rem;
+    font-weight:600;
+    cursor:pointer;
+    padding:4px 8px;
+    border-radius:4px;
+  }
+  .successor-card .remove-btn:hover{background:#FBE9E5;}
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:10px 18px;
+    border-radius:6px;
+    border:none;
+    font-size:.9rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-light);}
+  .btn-outline{
+    background:transparent;
+    border:1px solid var(--primary);
+    color:var(--primary);
+  }
+  .btn-outline:hover{background:#EEF7F5;}
+  .btn-block{width:100%;justify-content:center;}
+
+  .actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:8px;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .actions .btn{flex:1;min-width:160px;}
+
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--primary);
+    color:#fff;
+    padding:12px 22px;
+    border-radius:8px;
+    font-size:.9rem;
+    box-shadow:0 6px 18px rgba(0,0,0,0.18);
+    opacity:0;
+    pointer-events:none;
+    transition:.25s;
+    z-index:999;
+    text-align:center;
+    max-width:90%;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+
+  .submitted-view{
+    text-align:center;
+    padding:60px 20px;
+  }
+  .submitted-view .icon{
+    width:64px;height:64px;
+    border-radius:50%;
+    background:#EEF7F5;
+    color:var(--primary);
+    display:flex;align-items:center;justify-content:center;
+    font-size:32px;
+    margin:0 auto 16px;
+  }
+  .submitted-view h2{border:none;color:var(--primary);}
+  .submitted-view p{color:var(--muted);}
+
+  .priority-tag{
+    display:inline-block;
+    font-size:.7rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    color:var(--primary);
+    background:#EEF7F5;
+    padding:2px 8px;
+    border-radius:4px;
+    margin-bottom:8px;
+  }
+
+  .required-note{
+    font-size:.8rem;
+    color:var(--muted);
+    margin:-8px 0 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Succession Planning Form</h1>
+  <p>People &amp; Culture · Akij Resource Ltd — confidential, for internal succession planning purposes</p>
+</div>
+
+<div class="wrap">
+
+  <div class="progress">
+    <div><span id="prog1"></span></div>
+    <div><span id="prog2"></span></div>
+    <div><span id="prog3"></span></div>
+  </div>
+
+  <form id="succForm">
+
+    <!-- SECTION 1: EMPLOYEE INFO -->
+    <div class="card">
+      <h2>1. Your Information</h2>
+      <p class="sub">Tell us a little about your current role.</p>
+      <div class="grid">
+        <div class="field">
+          <label>Name <span class="req">*</span></label>
+          <input type="text" id="name" required>
+        </div>
+        <div class="field">
+          <label>Employee ID <span class="req">*</span></label>
+          <input type="text" id="empId" required>
+        </div>
+        <div class="field">
+          <label>Email <span class="req">*</span></label>
+          <input type="email" id="email" required>
+        </div>
+        <div class="field">
+          <label>Designation <span class="req">*</span></label>
+          <input type="text" id="designation" required>
+        </div>
+
+        <div class="field full">
+          <label>SBU <span class="req">*</span></label>
+          <select id="sbu" required></select>
+        </div>
+        <div class="field full hidden" id="sbuOtherField">
+          <label>Please specify SBU <span class="req">*</span></label>
+          <input type="text" id="sbuOther">
+        </div>
+
+        <div class="field">
+          <label>Department <span class="req">*</span></label>
+          <select id="department" required>
+            <option value="">Select Department</option>
+            <option>HR</option>
+            <option>Marketing</option>
+            <option>Finance</option>
+            <option>Operation</option>
+            <option>IT</option>
+            <option value="Others">Others</option>
+          </select>
+        </div>
+        <div class="field hidden" id="deptOtherField">
+          <label>Please specify Department <span class="req">*</span></label>
+          <input type="text" id="deptOther">
+        </div>
+
+        <div class="field">
+          <label>Section <span class="req">*</span></label>
+          <select id="section" required></select>
+        </div>
+        <div class="field hidden" id="sectionOtherField">
+          <label>Please specify Section <span class="req">*</span></label>
+          <input type="text" id="sectionOther">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: ROLE TYPE -->
+    <div class="card">
+      <h2>2. Managerial Role Type</h2>
+      <p class="sub">Select the option that best describes your current role.</p>
+      <div class="radio-group">
+        <label class="radio-option" id="optIC">
+          <input type="radio" name="roleType" value="IC" required>
+          <div>
+            <div class="label-title">Individual Contributor</div>
+            <div class="label-sub">Don't manage a team yet</div>
+          </div>
+        </label>
+        <label class="radio-option" id="optTM">
+          <input type="radio" name="roleType" value="TM" required>
+          <div>
+            <div class="label-title">Team Management</div>
+            <div class="label-sub">Manage a team</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="field hidden" id="teamSizeField" style="margin-top:16px;max-width:260px;">
+        <label>Number of people in your team <span class="req">*</span></label>
+        <input type="number" id="teamSize" min="1">
+      </div>
+    </div>
+
+    <!-- SECTION 3: SUCCESSOR -->
+    <div class="card">
+      <h2>3. Successor Identification</h2>
+      <p class="sub">Is there a suitable employee within Akij Resource who could succeed you in this role?</p>
+
+      <div class="radio-group">
+        <label class="radio-option" id="optYes">
+          <input type="radio" name="hasSuccessor" value="yes" required>
+          <div>
+            <div class="label-title">Yes</div>
+            <div class="label-sub">An internal employee can succeed me</div>
+          </div>
+        </label>
+        <label class="radio-option" id="optNo">
+          <input type="radio" name="hasSuccessor" value="no" required>
+          <div>
+            <div class="label-title">No</div>
+            <div class="label-sub">No suitable internal successor at this time</div>
+          </div>
+        </label>
+      </div>
+
+      <!-- INTERNAL SUCCESSORS -->
+      <div id="internalBlock" class="hidden" style="margin-top:20px;">
+        <div id="successorList"></div>
+        <button type="button" class="btn btn-outline btn-block" id="addSuccessorBtn">+ Add another successor</button>
+        <p class="hint" style="margin-top:8px;">If you add more than one successor, the order below is treated as priority ranking (Priority 1 = most ready).</p>
+      </div>
+
+      <!-- EXTERNAL RECRUITMENT -->
+      <div id="externalBlock" class="hidden" style="margin-top:20px;">
+        <div class="field full">
+          <label>Notes for external recruitment <span class="req">*</span></label>
+          <textarea id="externalNotes" placeholder="E.g. recommended sourcing approach, target profile, market availability, expected timeline..."></textarea>
+        </div>
+        <div class="field full" style="margin-top:16px;">
+          <label>Rationale for recommending external hiring <span class="req">*</span></label>
+          <textarea id="externalRationale" placeholder="Explain why no internal candidate is currently suitable, and why external recruitment is the appropriate path for this role."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="required-note">Fields marked <span class="req">*</span> are required. Please review your entries before submitting.</p>
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">Submit Succession Plan</button>
+        <button type="button" class="btn btn-outline" id="resetBtn">Clear Form</button>
+      </div>
+    </div>
+
+  </form>
+
+  <!-- SUBMITTED CONFIRMATION -->
+  <div class="card submitted-view hidden" id="submittedView">
+    <div class="icon">✓</div>
+    <h2>Succession Plan Submitted</h2>
+    <p>Thank you. Your succession plan has been recorded for People &amp; Culture review.</p>
+    <button class="btn btn-primary" id="newFormBtn">Submit Another Response</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ---------- DATA ----------
+  const sbuList = [
+    "Akij Resource (Corporate-serving multiple SBUs)",
+    "Akij Ispat",
+    "Akij Building Solutions Limited",
+    "Akij Cement Company Ltd.",
+    "Akij Poly Fibre Industries Ltd.",
+    "Akij Ready Mix Concrete Ltd",
+    "Magnum Steel Industries Limited",
+    "Akij Commodities Ltd.",
+    "Akij Commodities Ltd. (Trading)",
+    "Bongo Traders Ltd",
+    "Daily Trading Company Ltd",
+    "Nobayon Traders",
+    "M/S The Successors",
+    "Direct Trading Company Ltd",
+    "Asia One Trading Company Ltd",
+    "Eurasia Trading Company Ltd",
+    "Lineasia Trading Co. Ltd.",
+    "Resource Traders Ltd.",
+    "Batayon Traders Ltd.",
+    "ARL Trading Int. Ltd.",
+    "Optima Traders Limited",
+    "ARL Traders Ltd.",
+    "Exotica Traders Limited",
+    "Akij Essentials Ltd.",
+    "Hashem Rice Mills Ltd.",
+    "Kafil And Razzak Agro Ltd.",
+    "Akij InfoTech Ltd.",
+    "Akij Telecom Ltd.",
+    "Blue Pill Limited",
+    "FinTech",
+    "Nextjobz",
+    "Akij iBOS Limited",
+    "Akij Agro Feed Ltd.",
+    "Akij Breeders Ltd",
+    "Akij Agri Life Limited",
+    "Farias Agro Essence",
+    "Akij Ocean Line Ltd.",
+    "AKIJ SHIPPING LINES PTE LTD, SINGAPORE",
+    "Akij Maritime Limited",
+    "Akij Logistics Ltd.",
+    "Akij Shipping Line Ltd.",
+    "Akij Light Engineering Limited",
+    "Akij Consumer Electronics Ltd.",
+    "AKIJ Electrofab",
+    "Akij Engineering Ltd.",
+    "Akij Lifecare Limited- Pharmacy",
+    "Akij Lifecare Limited- Mediplex",
+    "Akij Lifecare Limited- Medical Device",
+    "Akij Air Service Ltd.",
+    "Akij Consulting Limited",
+    "Akij Broadcast Media Ltd",
+    "Akij Landmark Limited",
+    "AKIJ Automobile Industries Ltd",
+    "Akij Essentials Ltd"
+  ];
+
+  const sectionList = [
+    "Accounts","Finance","Internal Audit","Admin & Legal","People & Culture",
+    "Sales","Marketing","Design & Development","Procurement","Project",
+    "Strategy","OPEX","Sustainability","Production","Quality (QA/QC)",
+    "Maintenance","Operations","Supply chain","Logistic","Vat & Tax","Treasury"
+  ];
+
+  // ---------- POPULATE SELECTS ----------
+  const sbuSelect = document.getElementById('sbu');
+  sbuSelect.appendChild(new Option("Select SBU",""));
+  sbuList.forEach(s => sbuSelect.appendChild(new Option(s, s)));
+  sbuSelect.appendChild(new Option("Others (please specify)", "Others"));
+
+  const sectionSelect = document.getElementById('section');
+  sectionSelect.appendChild(new Option("Select Section",""));
+  sectionList.forEach(s => sectionSelect.appendChild(new Option(s, s)));
+  sectionSelect.appendChild(new Option("Others (please specify)", "Others"));
+
+  // ---------- TOAST ----------
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=> t.classList.remove('show'), 2600);
+  }
+
+  // ---------- "OTHERS" TOGGLES ----------
+  function toggleOther(selectEl, fieldEl, inputEl){
+    selectEl.addEventListener('change', () => {
+      const isOther = selectEl.value === 'Others';
+      fieldEl.classList.toggle('hidden', !isOther);
+      inputEl.required = isOther;
+      if(!isOther) inputEl.value = '';
+    });
+  }
+  toggleOther(sbuSelect, document.getElementById('sbuOtherField'), document.getElementById('sbuOther'));
+  toggleOther(document.getElementById('department'), document.getElementById('deptOtherField'), document.getElementById('deptOther'));
+  toggleOther(sectionSelect, document.getElementById('sectionOtherField'), document.getElementById('sectionOther'));
+
+  // ---------- ROLE TYPE ----------
+  const roleRadios = document.querySelectorAll('input[name="roleType"]');
+  const teamSizeField = document.getElementById('teamSizeField');
+  const teamSizeInput = document.getElementById('teamSize');
+
+  roleRadios.forEach(r => r.addEventListener('change', () => {
+    document.getElementById('optIC').classList.toggle('selected', document.getElementById('optIC').querySelector('input').checked);
+    document.getElementById('optTM').classList.toggle('selected', document.getElementById('optTM').querySelector('input').checked);
+
+    const isTeam = document.querySelector('input[name="roleType"]:checked').value === 'TM';
+    teamSizeField.classList.toggle('hidden', !isTeam);
+    teamSizeInput.required = isTeam;
+    if(!isTeam) teamSizeInput.value = '';
+  }));
+
+  // ---------- SUCCESSOR YES/NO ----------
+  const successorRadios = document.querySelectorAll('input[name="hasSuccessor"]');
+  const internalBlock = document.getElementById('internalBlock');
+  const externalBlock = document.getElementById('externalBlock');
+  const externalNotes = document.getElementById('externalNotes');
+  const externalRationale = document.getElementById('externalRationale');
+
+  successorRadios.forEach(r => r.addEventListener('change', () => {
+    document.getElementById('optYes').classList.toggle('selected', document.getElementById('optYes').querySelector('input').checked);
+    document.getElementById('optNo').classList.toggle('selected', document.getElementById('optNo').querySelector('input').checked);
+
+    const hasSuccessor = document.querySelector('input[name="hasSuccessor"]:checked').value === 'yes';
+    internalBlock.classList.toggle('hidden', !hasSuccessor);
+    externalBlock.classList.toggle('hidden', hasSuccessor);
+
+    externalNotes.required = !hasSuccessor;
+    externalRationale.required = !hasSuccessor;
+
+    if(hasSuccessor){
+      externalNotes.value = '';
+      externalRationale.value = '';
+      if(successorCount === 0) addSuccessor();
+    } else {
+      // clear internal successor requireds
+      document.querySelectorAll('.successor-required').forEach(el => el.required = false);
+    }
+  }));
+
+  // ---------- DYNAMIC SUCCESSOR CARDS ----------
+  const successorList = document.getElementById('successorList');
+  let successorCount = 0;
+
+  function addSuccessor(){
+    successorCount++;
+    const idx = successorCount;
+    const div = document.createElement('div');
+    div.className = 'successor-card';
+    div.dataset.idx = idx;
+    div.innerHTML = `
+      <span class="badge">Priority ${idx}</span>
+      ${idx > 1 ? '<button type="button" class="remove-btn">Remove</button>' : ''}
+      <div class="priority-tag">Successor ${idx}</div>
+      <div class="grid" style="margin-top:6px;">
+        <div class="field">
+          <label>Name <span class="req">*</span></label>
+          <input type="text" class="successor-required" name="succName_${idx}" required>
+        </div>
+        <div class="field">
+          <label>Enroll ID <span class="req">*</span></label>
+          <input type="text" class="successor-required" name="succEnroll_${idx}" required>
+        </div>
+        <div class="field">
+          <label>Email <span class="req">*</span></label>
+          <input type="email" class="successor-required" name="succEmail_${idx}" required>
+        </div>
+        <div class="field">
+          <label>Designation <span class="req">*</span></label>
+          <input type="text" class="successor-required" name="succDesignation_${idx}" required>
+        </div>
+        <div class="field">
+          <label>Time required to be ready (months) <span class="req">*</span></label>
+          <input type="number" class="successor-required" name="succMonths_${idx}" min="0" required>
+        </div>
+      </div>
+      <div class="field full" style="margin-top:14px;">
+        <label>Rationale: why is this person fit to be the successor? <span class="req">*</span></label>
+        <textarea class="successor-required" name="succRationale_${idx}" required placeholder="E.g. relevant experience, skills demonstrated, readiness level, development needed..."></textarea>
+      </div>
+    `;
+    successorList.appendChild(div);
+
+    const removeBtn = div.querySelector('.remove-btn');
+    if(removeBtn){
+      removeBtn.addEventListener('click', () => {
+        div.remove();
+        renumberSuccessors();
+      });
+    }
+  }
+
+  function renumberSuccessors(){
+    const cards = successorList.querySelectorAll('.successor-card');
+    cards.forEach((card, i) => {
+      const priority = i + 1;
+      card.querySelector('.badge').textContent = `Priority ${priority}`;
+      card.querySelector('.priority-tag').textContent = `Successor ${priority}`;
+    });
+    successorCount = cards.length;
+  }
+
+  document.getElementById('addSuccessorBtn').addEventListener('click', addSuccessor);
+
+  // ---------- PROGRESS BAR (simple scroll-based) ----------
+  function updateProgress(){
+    const sections = [
+      document.querySelectorAll('.card')[0],
+      document.querySelectorAll('.card')[1],
+      document.querySelectorAll('.card')[2]
+    ];
+    const bars = [document.getElementById('prog1'), document.getElementById('prog2'), document.getElementById('prog3')];
+    sections.forEach((sec, i) => {
+      const inputs = sec.querySelectorAll('input[required], select[required], textarea[required]');
+      let filled = 0;
+      inputs.forEach(inp => {
+        if(inp.type === 'radio'){
+          if(document.querySelector(`input[name="${inp.name}"]:checked`)) filled++;
+        } else if(inp.value && inp.value.trim() !== ''){
+          filled++;
+        }
+      });
+      const pct = inputs.length ? Math.min(100, Math.round((filled/inputs.length)*100)) : 0;
+      bars[i].style.width = pct + '%';
+    });
+  }
+  document.getElementById('succForm').addEventListener('input', updateProgress);
+  document.getElementById('succForm').addEventListener('change', updateProgress);
+
+  // ---------- SUBMIT ----------
+  document.getElementById('succForm').addEventListener('submit', function(e){
+    e.preventDefault();
+
+    if(!this.checkValidity()){
+      this.reportValidity();
+      toast('Please complete all required fields.');
+      return;
+    }
+
+    // Collect data (for future integration / console review)
+    const data = {
+      name: document.getElementById('name').value,
+      empId: document.getElementById('empId').value,
+      email: document.getElementById('email').value,
+      designation: document.getElementById('designation').value,
+      sbu: sbuSelect.value === 'Others' ? document.getElementById('sbuOther').value : sbuSelect.value,
+      department: document.getElementById('department').value === 'Others' ? document.getElementById('deptOther').value : document.getElementById('department').value,
+      section: sectionSelect.value === 'Others' ? document.getElementById('sectionOther').value : sectionSelect.value,
+      roleType: document.querySelector('input[name="roleType"]:checked').value,
+      teamSize: teamSizeInput.value || null,
+      hasSuccessor: document.querySelector('input[name="hasSuccessor"]:checked').value,
+      successors: [],
+      externalNotes: externalNotes.value || null,
+      externalRationale: externalRationale.value || null
+    };
+
+    if(data.hasSuccessor === 'yes'){
+      successorList.querySelectorAll('.successor-card').forEach((card, i) => {
+        data.successors.push({
+          priority: i + 1,
+          name: card.querySelector(`[name^="succName_"]`).value,
+          enrollId: card.querySelector(`[name^="succEnroll_"]`).value,
+          email: card.querySelector(`[name^="succEmail_"]`).value,
+          designation: card.querySelector(`[name^="succDesignation_"]`).value,
+          monthsToReady: card.querySelector(`[name^="succMonths_"]`).value,
+          rationale: card.querySelector(`[name^="succRationale_"]`).value
+        });
+      });
+    }
+
+    console.log('Succession Plan Submission:', data);
+
+    document.getElementById('succForm').classList.add('hidden');
+    document.getElementById('submittedView').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  // ---------- RESET ----------
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    document.getElementById('succForm').reset();
+    successorList.innerHTML = '';
+    successorCount = 0;
+    document.querySelectorAll('.radio-option').forEach(o => o.classList.remove('selected'));
+    [teamSizeField, internalBlock, externalBlock, document.getElementById('sbuOtherField'),
+     document.getElementById('deptOtherField'), document.getElementById('sectionOtherField')]
+      .forEach(el => el.classList.add('hidden'));
+    updateProgress();
+    toast('Form cleared.');
+  });
+
+  document.getElementById('newFormBtn').addEventListener('click', () => {
+    document.getElementById('submittedView').classList.add('hidden');
+    document.getElementById('succForm').classList.remove('hidden');
+    document.getElementById('resetBtn').click();
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  updateProgress();
+</script>
+
+</body>
+</html>
