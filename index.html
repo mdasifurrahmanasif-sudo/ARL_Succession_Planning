@@ -294,8 +294,8 @@
     <div class="card">
       <div id="loginError" class="login-error hidden"></div>
       <div class="field" style="margin-bottom:16px;">
-        <label>Email</label>
-        <input type="email" id="adminEmail" placeholder="admin@akijresource.com" autocomplete="username">
+        <label>Login ID</label>
+        <input type="text" id="adminLoginId" placeholder="Enter your login ID" autocomplete="username">
       </div>
       <div class="field" style="margin-bottom:20px;">
         <label>Password</label>
@@ -653,15 +653,20 @@ updateProgress();
    ADMIN · STATE
    ========================================================= */
 let allRows = [];
-let currentUser = null;
+const ADMIN_ID   = 'HrARL';
+const ADMIN_PASS = 'HrARL@123';
+const SESSION_KEY = 'arl_admin_auth';
+
+function isAdminLoggedIn(){
+  return sessionStorage.getItem(SESSION_KEY) === '1';
+}
 
 /* =========================================================
    ADMIN · NAVIGATION
    ========================================================= */
-document.getElementById('adminNavBtn').addEventListener('click', async ()=>{
-  const { data:{ session } } = await _sb.auth.getSession();
-  if(session){ currentUser = session.user; enterDashboard(); }
-  else { showView('view-admin-login'); }
+document.getElementById('adminNavBtn').addEventListener('click', ()=>{
+  if(isAdminLoggedIn()) enterDashboard();
+  else showView('view-admin-login');
 });
 
 document.getElementById('backToFormBtn').addEventListener('click', ()=> showView('view-form'));
@@ -669,41 +674,40 @@ document.getElementById('backToFormBtn').addEventListener('click', ()=> showView
 /* =========================================================
    ADMIN · LOGIN
    ========================================================= */
-async function doLogin(){
-  const email = document.getElementById('adminEmail').value.trim();
-  const pass  = document.getElementById('adminPassword').value;
-  const errEl = document.getElementById('loginError');
+function doLogin(){
+  const loginId = document.getElementById('adminLoginId').value.trim();
+  const pass    = document.getElementById('adminPassword').value;
+  const errEl   = document.getElementById('loginError');
   errEl.classList.add('hidden');
 
-  if(!email || !pass){
-    errEl.textContent = 'Please enter your email and password.';
+  if(!loginId || !pass){
+    errEl.textContent = 'Please enter your Login ID and password.';
     errEl.classList.remove('hidden'); return;
   }
 
-  const btn = document.getElementById('loginBtn');
-  btn.disabled = true; btn.textContent = 'Signing in…';
-
-  const { data, error } = await _sb.auth.signInWithPassword({ email, password: pass });
-  btn.disabled = false; btn.textContent = 'Sign In';
-
-  if(error){
-    errEl.textContent = 'Incorrect email or password. Please try again.';
-    errEl.classList.remove('hidden'); return;
+  if(loginId !== ADMIN_ID || pass !== ADMIN_PASS){
+    errEl.textContent = 'Incorrect Login ID or password. Please try again.';
+    errEl.classList.remove('hidden');
+    document.getElementById('adminPassword').value = '';
+    return;
   }
-  currentUser = data.user;
+
+  sessionStorage.setItem(SESSION_KEY, '1');
   enterDashboard();
 }
 
 document.getElementById('loginBtn').addEventListener('click', doLogin);
-document.getElementById('adminEmail').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('adminPassword').focus(); });
+document.getElementById('adminLoginId').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('adminPassword').focus(); });
 document.getElementById('adminPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 
 /* =========================================================
    ADMIN · LOGOUT
    ========================================================= */
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  await _sb.auth.signOut();
-  currentUser = null; allRows = [];
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  sessionStorage.removeItem(SESSION_KEY);
+  allRows = [];
+  document.getElementById('adminLoginId').value = '';
+  document.getElementById('adminPassword').value = '';
   showView('view-form');
   showToast('Signed out successfully.');
 });
@@ -713,7 +717,7 @@ document.getElementById('logoutBtn').addEventListener('click', async ()=>{
    ========================================================= */
 async function enterDashboard(){
   showView('view-admin-dashboard');
-  document.getElementById('adminUserInfo').textContent = 'Signed in as: ' + (currentUser?.email || '');
+  document.getElementById('adminUserInfo').textContent = 'Signed in as: ' + ADMIN_ID;
   await loadSubmissions();
 }
 
@@ -925,14 +929,7 @@ function buildDetailHTML(r){
 /* =========================================================
    RESTORE SESSION ON PAGE LOAD
    ========================================================= */
-(async ()=>{
-  const { data:{ session } } = await _sb.auth.getSession();
-  if(session) currentUser = session.user;
-})();
-
-_sb.auth.onAuthStateChange((event, session)=>{
-  if(event === 'SIGNED_OUT') currentUser = null;
-});
+// sessionStorage preserves the admin session for this browser tab.
 </script>
 </body>
 </html>
