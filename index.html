@@ -253,11 +253,11 @@
         </div>
         <div id="externalBlock" class="hidden" style="margin-top:20px;">
           <div class="field full">
-            <label>Notes for external recruitment <span class="req">*</span></label>
+            <label>What is your plan to build a succesor for this role? <span class="req">*</span></label>
             <textarea id="externalNotes" placeholder="E.g. recommended sourcing approach, target profile, market availability, expected timeline..."></textarea>
           </div>
           <div class="field full" style="margin-top:16px;">
-            <label>Rationale for recommending external hiring <span class="req">*</span></label>
+            <label>If you need external hiring what is your requirement for the role? <span class="req">*</span></label>
             <textarea id="externalRationale" placeholder="Explain why no internal candidate is currently suitable..."></textarea>
           </div>
         </div>
@@ -871,10 +871,10 @@ function buildDetailHTML(r){
     s3body = `
       <div style="margin-top:16px;">
         <div class="field full" style="margin-bottom:16px;">
-          <label>Notes for external recruitment</label>${fvML(r.external_notes)}
+          <label>What is your plan to build a succesor for this role?</label>${fvML(r.external_notes)}
         </div>
         <div class="field full">
-          <label>Rationale for recommending external hiring</label>${fvML(r.external_rationale)}
+          <label>If you need external hiring what is your requirement for the role?</label>${fvML(r.external_rationale)}
         </div>
       </div>`;
   }
