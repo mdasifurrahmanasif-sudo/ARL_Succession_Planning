@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Succession Plan | Akij Resource</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root{
     --primary:#0B4F4A;--primary-light:#13796F;--accent:#D98E3F;
@@ -128,6 +129,10 @@
   .filter-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
   .filter-bar input,.filter-bar select{flex:1;min-width:150px;padding:8px 11px;border:1px solid var(--border);border-radius:6px;font-size:.875rem;font-family:inherit;background:#fff;}
 
+  .results-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .results-count{font-size:.85rem;color:var(--muted);}
+  .results-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
   .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
   table{width:100%;border-collapse:collapse;font-size:.875rem;}
   thead{background:#EEF7F5;}
@@ -155,10 +160,15 @@
   .detail-actions{display:flex;gap:8px;flex-shrink:0;}
   .view-banner{background:#EEF7F5;border:1px solid #B2D8D4;border-radius:8px;padding:10px 16px;font-size:.85rem;color:var(--primary);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
 
+  .bulk-print-header{margin-bottom:16px;}
+  .bulk-print-header h3{margin:0 0 4px;color:var(--primary);font-size:1.15rem;}
+  .bulk-print-header .meta{font-size:.82rem;color:var(--muted);}
+
   @media print{
     .header .admin-link,.detail-actions,.view-banner,.dash-top{display:none!important;}
     .wide-wrap,.wrap{padding:0;}
     .card{box-shadow:none!important;break-inside:avoid;}
+    .bulk-print-item + .bulk-print-item{page-break-before:always;break-before:page;}
   }
 </style>
 </head>
@@ -348,11 +358,21 @@
       </select>
     </div>
 
+    <div class="results-bar">
+      <div class="results-count" id="resultsCount"></div>
+      <div class="results-actions">
+        <button class="btn btn-outline btn-sm" id="exportExcelBtn">&#11015; Export to Excel</button>
+        <button class="btn btn-outline btn-sm" id="bulkPrintBtn">&#128438; Bulk Print / PDF</button>
+      </div>
+    </div>
+
     <div class="table-wrap" id="tableWrap">
       <div class="loading-msg">Loading submissions&#8230;</div>
     </div>
   </div>
 </div>
+
+<div id="bulkPrintArea" class="wrap hidden"></div>
 
 <!-- ======================================================
      VIEW 4 · SUBMISSION DETAIL (form-format, read-only)
@@ -653,6 +673,7 @@ updateProgress();
    ADMIN · STATE
    ========================================================= */
 let allRows = [];
+let filteredRows = [];
 const ADMIN_ID   = 'HrARL';
 const ADMIN_PASS = 'HrARL@123';
 const SESSION_KEY = 'arl_admin_auth';
@@ -780,6 +801,10 @@ function applyFilters(){
    ADMIN · RENDER TABLE
    ========================================================= */
 function renderTable(rows){
+  filteredRows = rows;
+  const countEl = document.getElementById('resultsCount');
+  if(countEl) countEl.textContent = `Showing ${rows.length} of ${allRows.length} submission${allRows.length===1?'':'s'}`;
+
   if(!rows.length){
     document.getElementById('tableWrap').innerHTML = `<div class="empty-state"><div class="big-icon">&#128203;</div><div>No submissions match your filters.</div></div>`;
     return;
@@ -811,6 +836,92 @@ function renderTable(rows){
     tr.addEventListener('click', ()=> openDetail(tr.dataset.id));
   });
 }
+
+/* =========================================================
+   ADMIN · EXPORT TO EXCEL (respects current filters)
+   ========================================================= */
+function exportExcel(){
+  if(!filteredRows.length){ showToast('No submissions to export.', true); return; }
+
+  const summary = filteredRows.map(r => ({
+    'Submitted': fmtDate(r.created_at),
+    'Name': r.name || '',
+    'Employee ID': r.emp_id || '',
+    'Email': r.email || '',
+    'Designation': r.designation || '',
+    'SBU': r.sbu || '',
+    'Department': r.department || '',
+    'Section': r.section || '',
+    'Role Type': r.role_type === 'TM' ? 'Team Management' : 'Individual Contributor',
+    'Team Size': r.team_size ?? '',
+    'Has Successor': r.has_successor === 'yes' ? 'Yes' : 'No',
+    'Successor Count': Array.isArray(r.successors) ? r.successors.length : 0,
+    'Succession Plan Notes': r.external_notes || '',
+    'External Hiring Requirement': r.external_rationale || ''
+  }));
+
+  const successorRows = [];
+  filteredRows.forEach(r=>{
+    if(Array.isArray(r.successors)){
+      r.successors.forEach(s=>{
+        successorRows.push({
+          'Employee Name': r.name || '',
+          'Employee ID': r.emp_id || '',
+          'SBU': r.sbu || '',
+          'Department': r.department || '',
+          'Priority': s.priority ?? '',
+          'Successor Name': s.name || '',
+          'Successor Enroll ID': s.enrollId || '',
+          'Successor Email': s.email || '',
+          'Successor Designation': s.designation || '',
+          'Time to Ready (months)': s.monthsToReady ?? '',
+          'Rationale': s.rationale || ''
+        });
+      });
+    }
+  });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), 'Submissions');
+  if(successorRows.length){
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(successorRows), 'Successors');
+  }
+  XLSX.writeFile(wb, `succession-plans_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast(`Exported ${filteredRows.length} submission${filteredRows.length===1?'':'s'} to Excel.`);
+}
+document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
+
+/* =========================================================
+   ADMIN · BULK PRINT / DOWNLOAD PDF (respects current filters)
+   ========================================================= */
+function bulkPrint(){
+  if(!filteredRows.length){ showToast('No submissions to print.', true); return; }
+
+  const area = document.getElementById('bulkPrintArea');
+  area.innerHTML = filteredRows.map(r => `
+    <div class="bulk-print-item">
+      <div class="bulk-print-header">
+        <h3>${escHtml(r.name||'—')}</h3>
+        <div class="meta">Employee ID: ${escHtml(r.emp_id||'—')} &middot; ${escHtml(r.sbu||'—')} &middot; Submitted: ${fmtDate(r.created_at)}</div>
+      </div>
+      ${buildDetailHTML(r)}
+    </div>`).join('');
+
+  document.querySelector('.header').classList.add('hidden');
+  VIEWS.forEach(v => document.getElementById(v).classList.add('hidden'));
+  area.classList.remove('hidden');
+
+  const cleanup = () => {
+    area.classList.add('hidden');
+    area.innerHTML = '';
+    document.querySelector('.header').classList.remove('hidden');
+    showView('view-admin-dashboard');
+    window.removeEventListener('afterprint', cleanup);
+  };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
+}
+document.getElementById('bulkPrintBtn').addEventListener('click', bulkPrint);
 
 /* =========================================================
    ADMIN · DETAIL VIEW
