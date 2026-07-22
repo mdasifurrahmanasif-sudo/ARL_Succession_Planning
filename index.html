@@ -72,6 +72,20 @@
   .remove-btn:hover{background:#FBE9E5;}
   .priority-tag{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--primary);background:#EEF7F5;padding:2px 8px;border-radius:4px;margin-bottom:8px;}
 
+  /* DEVELOPMENT PLAN (per successor) */
+  .dev-plan{border-top:1px dashed var(--border);margin-top:16px;padding-top:14px;}
+  .dev-plan-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .dev-plan-head strong{font-size:.88rem;color:var(--primary);}
+  .dev-plan-controls{display:flex;gap:8px;}
+  .dp-modules{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .dp-chip{display:inline-flex;align-items:center;gap:6px;background:#EEF7F5;color:var(--primary);font-size:.8rem;padding:4px 6px 4px 10px;border-radius:14px;}
+  .dp-chip-x{background:none;border:none;color:var(--primary);cursor:pointer;font-size:.9rem;line-height:1;padding:0 2px;}
+  .dp-tasks{display:flex;flex-direction:column;gap:6px;}
+  .dp-task{display:flex;align-items:center;gap:8px;font-size:.85rem;}
+  .dp-task span{flex:1;}
+  .dp-done{text-decoration:line-through;color:var(--muted);}
+  .dp-task-x{background:none;border:none;color:var(--danger);cursor:pointer;font-size:.9rem;line-height:1;padding:0 2px;}
+
   /* BUTTONS */
   .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:6px;border:none;font-size:.9rem;font-weight:600;cursor:pointer;transition:.15s;}
   .btn-primary{background:var(--primary);color:#fff;}
@@ -169,6 +183,7 @@
     .wide-wrap,.wrap{padding:0;}
     .card{box-shadow:none!important;break-inside:avoid;}
     .bulk-print-item + .bulk-print-item{page-break-before:always;break-before:page;}
+    .dev-plan-controls,.dp-chip-x,.dp-task-x{display:none!important;}
   }
 </style>
 </head>
@@ -942,6 +957,42 @@ document.getElementById('backToDashBtn').addEventListener('click', ()=>{
   window.scrollTo({top:0,behavior:'smooth'});
 });
 
+/* Development plan: training modules + task list, editable per successor */
+document.getElementById('detailContent').addEventListener('click', async e=>{
+  const btn = e.target.closest('[data-action]');
+  if(!btn) return;
+  const wrap = btn.closest('.dev-plan');
+  if(!wrap) return;
+  const r = allRows.find(x => x.id === wrap.dataset.row);
+  const succ = r && r.successors && r.successors[parseInt(wrap.dataset.succ)];
+  if(!succ) return;
+  succ.devPlan = succ.devPlan || {modules:[], tasks:[]};
+
+  const action = btn.dataset.action;
+  if(action === 'add-mod'){
+    const v = prompt('Training module / development intervention:');
+    if(!v || !v.trim()) return;
+    succ.devPlan.modules.push(v.trim());
+  } else if(action === 'rm-mod'){
+    succ.devPlan.modules.splice(parseInt(btn.dataset.mi), 1);
+  } else if(action === 'add-task'){
+    const v = prompt('Personal development task:');
+    if(!v || !v.trim()) return;
+    succ.devPlan.tasks.push({text: v.trim(), done: false});
+  } else if(action === 'rm-task'){
+    succ.devPlan.tasks.splice(parseInt(btn.dataset.ti), 1);
+  } else if(action === 'toggle-task'){
+    succ.devPlan.tasks[parseInt(btn.dataset.ti)].done = btn.checked;
+  } else {
+    return;
+  }
+
+  const { error } = await _sb.from('succession_plans').update({successors: r.successors}).eq('id', r.id);
+  if(error){ console.error(error); showToast('Failed to save development plan.', true); return; }
+  document.getElementById('detailContent').innerHTML = buildDetailHTML(r);
+  showToast('Development plan updated.');
+});
+
 /* =========================================================
    DETAIL · HTML BUILDER (mirrors the form layout exactly)
    ========================================================= */
@@ -954,6 +1005,32 @@ function fvML(v){
   return v !== null && v !== undefined && String(v).trim() !== ''
     ? `<div class="field-value multiline">${escHtml(String(v))}</div>`
     : `<div class="field-value empty">&#8212;</div>`;
+}
+
+function renderDevPlan(s, i, rowId){
+  const dp = s.devPlan || {modules:[], tasks:[]};
+  const modules = (dp.modules||[]).map((m,mi)=>`
+    <span class="dp-chip">${escHtml(m)}<button type="button" class="dp-chip-x" data-action="rm-mod" data-succ="${i}" data-mi="${mi}" title="Remove">&times;</button></span>`).join('')
+    || '<span class="hint">No training modules yet.</span>';
+  const tasks = (dp.tasks||[]).map((t,ti)=>`
+    <div class="dp-task">
+      <input type="checkbox" data-action="toggle-task" data-succ="${i}" data-ti="${ti}" ${t.done?'checked':''}>
+      <span class="${t.done?'dp-done':''}">${escHtml(t.text)}</span>
+      <button type="button" class="dp-task-x" data-action="rm-task" data-succ="${i}" data-ti="${ti}" title="Remove">&times;</button>
+    </div>`).join('') || '<span class="hint">No development tasks yet.</span>';
+
+  return `
+    <div class="dev-plan" data-row="${escHtml(rowId)}" data-succ="${i}">
+      <div class="dev-plan-head">
+        <strong>Development Plan</strong>
+        <div class="dev-plan-controls">
+          <button type="button" class="btn btn-outline btn-sm" data-action="add-mod" data-succ="${i}">+ Training Module</button>
+          <button type="button" class="btn btn-outline btn-sm" data-action="add-task" data-succ="${i}">+ Task</button>
+        </div>
+      </div>
+      <div class="field full" style="margin-bottom:8px;"><label>Training Modules</label><div class="dp-modules">${modules}</div></div>
+      <div class="field full"><label>Personal Development Tasklist</label><div class="dp-tasks">${tasks}</div></div>
+    </div>`;
 }
 
 function buildDetailHTML(r){
@@ -977,6 +1054,7 @@ function buildDetailHTML(r){
         <div class="field full" style="margin-top:14px;">
           <label>Rationale</label>${fvML(s.rationale)}
         </div>
+        ${renderDevPlan(s, i, r.id)}
       </div>`).join('');
   } else if(!hasS){
     s3body = `
